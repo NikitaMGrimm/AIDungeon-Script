@@ -4,8 +4,11 @@ const modifier = (input) => {
     if (state.setup === undefined) {
         state.setup = true; // Only run it once
         // Stuff you only want to do once.
-        state.criticalSuccess = false;
-        state.rollAdvantage = true;
+        state.lastRollWasCriticalSuccess = false;
+        state.rollAdvantage = false;
+        state.rollBias = 0;
+        state.difficultyBias = 0;
+        state.hideRoll = false;
     }
 
     state.memory.frontMemory = "";
@@ -15,41 +18,49 @@ const modifier = (input) => {
     if (lowerInput.includes("/help")) {
         //displayHelp();
         state.useCustomResponse = true;
-        state.customResponse = "TEST: displayHelp()";
+        state.customResponse = displayHelp();
     }
 
-    let playerRoll = rollDice();
-    let checkRoll = rollDifficulty();
-
-    let failText = "Action Failed!]\n";
-    let critSuccess = "Critical Success!]\n";
-    let successText = "Action Success!]\n";
+    let playerRoll = rollDice() + state.rollBias;
+    let checkRoll = rollDifficulty() + state.difficultyBias;
 
     let result = ' [' + playerRoll + '>=' + checkRoll + ': ';
-    let succeedActionMemory = "\n[PLAYER ACTION SUCCEEDS]";
-    let failActionMemory = "\n[PLAYER ACTION FAILS]";
+    let failText = "Action Failed!]\n";
+    let successText = "Action Success!]\n";
 
-    if (state.criticalSuccess == true) {
-        state.criticalSuccess = false;
+    let failActionMemorySentences = [
+        "The action will be done clumsily and slow",
+        "The action has a slightly unfortunate result",
+        "The action fails slightly",
+        "The action fails miserably"];
+    let failActionMemoryWeights = [30, 75, 20, 5];
+    let failActionMemory = "[PLAYER ACTION FAIL]\n" + "[" + weightedRandom(failActionMemorySentences, failActionMemoryWeights) + "]";
+
+    let successActionMemorySentences = [
+        "The action will be tried with increased effort",
+        "The action has a higher chance of success",
+        "The action will be done with experience/professionalism",
+        "Unexpected divine success! EXTREMELY beneficial result."];
+    let successActionMemoryWeights = [30, 70, 20, 10];
+    let successActionMemory = "[PLAYER ACTION SUCCESS]\n" + "[" + weightedRandom(successActionMemorySentences, successActionMemoryWeights) + "]";
+
+    if (state.lastRollWasCriticalSuccess == true) {
+        state.lastRollWasCriticalSuccess = false;
         result = "[Action Success!]"
     } else if (playerRoll === 20) {
-        state.criticalSuccess = true;
+        state.lastRollWasCriticalSuccess = true;
         result += critSuccess;
-        state.memory.frontMemory += succeedActionMemory;
+        state.memory.frontMemory += successActionMemory;
     } else if (checkRoll > playerRoll) {
         result += failText;
         state.memory.frontMemory += failActionMemory;
     } else {
         result += successText;
-        state.memory.frontMemory += succeedActionMemory;
+        state.memory.frontMemory += successActionMemory;
     }
-
-    // Add to the original input
-    modifiedInput += '\n' + result;
 
     return { text: modifiedInput };
 }
 
 // Don't modify this part
 modifier(text);
-
