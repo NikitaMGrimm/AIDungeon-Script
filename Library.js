@@ -1,19 +1,19 @@
 // help function, state memory, etc...
 
 // Dice Roll Function.
-function rollDice() {
+function rollDice(max_roll) {
   if (state.rollAdvantage) {
-    const roll1 = Math.floor(Math.random() * 20) + 1;
-    const roll2 = Math.floor(Math.random() * 20) + 1;
+    const roll1 = Math.floor(Math.random() * max_roll) + 1;
+    const roll2 = Math.floor(Math.random() * max_roll) + 1;
     return Math.max(roll1, roll2);
   } else {
-    return Math.floor(Math.random() * 20) + 1;
+    return Math.floor(Math.random() * max_roll) + 1;
   }
 }
 
 // Roll Difficulty Function.
-function rollDifficulty() {
-  return Math.floor(Math.random() * 20) + 1;
+function rollDifficulty(max_roll) {
+  return Math.floor(Math.random() * max_roll) + 1;
 }
 
 function weightedRandom(items, weights) {
@@ -27,6 +27,10 @@ function weightedRandom(items, weights) {
             return items[i];
         }
     }
+}
+
+function clamp(num, min, max) {
+  return Math.min(Math.max(num, min), max);
 }
 
 function displayHelp() {

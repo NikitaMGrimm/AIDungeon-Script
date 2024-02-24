@@ -7,7 +7,7 @@ const modifier = (input) => {
         state.lastRollWasCriticalSuccess = false;
         state.rollAdvantage = false;
         state.rollBias = 0;
-        state.difficultyBias = 0;
+        state.difficultyBias = -3;
         state.hideRoll = false;
     }
 
@@ -21,23 +21,24 @@ const modifier = (input) => {
         state.customResponse = displayHelp();
     }
 
-    let playerRoll = rollDice() + state.rollBias;
-    let checkRoll = rollDifficulty() + state.difficultyBias;
+    let max_roll = 20;
+    let playerRoll = clamp(rollDice(max_roll) + state.rollBias, 1, max_roll);
+    let checkRoll = clamp(rollDifficulty(max_roll) + state.difficultyBias, 1, max_roll);
 
-    let result = ' [' + playerRoll + '>=' + checkRoll + ': ';
-    let failText = "Action Failed!]\n";
-    let successText = "Action Success!]\n";
+    let result = '[' + playerRoll + '>=' + checkRoll + ': ';
+    let failText = "Unlucky Roll]";
+    let successText = "Lucky Roll]";
 
     let failActionMemorySentences = [
         "The action will be done clumsily and slow",
         "The action has a slightly unfortunate result",
-        "The action fails slightly",
+        "The action is embarassing/unskilled/clumsy",
         "The action fails miserably"];
     let failActionMemoryWeights = [30, 75, 20, 5];
     let failActionMemory = "[PLAYER ACTION FAIL]\n" + "[" + weightedRandom(failActionMemorySentences, failActionMemoryWeights) + "]";
 
     let successActionMemorySentences = [
-        "The action will be tried with increased effort",
+        "You put increased effort into the action",
         "The action has a higher chance of success",
         "The action will be done with experience/professionalism",
         "Unexpected divine success! EXTREMELY beneficial result."];
@@ -46,10 +47,10 @@ const modifier = (input) => {
 
     if (state.lastRollWasCriticalSuccess == true) {
         state.lastRollWasCriticalSuccess = false;
-        result = "[Action Success!]"
+        result = "[Lucky Roll]"
     } else if (playerRoll === 20) {
         state.lastRollWasCriticalSuccess = true;
-        result += critSuccess;
+        result += successText;
         state.memory.frontMemory += successActionMemory;
     } else if (checkRoll > playerRoll) {
         result += failText;
@@ -57,6 +58,10 @@ const modifier = (input) => {
     } else {
         result += successText;
         state.memory.frontMemory += successActionMemory;
+    }
+
+    if (state.hideRoll == false) {
+        modifiedInput += "\n" + result
     }
 
     return { text: modifiedInput };
